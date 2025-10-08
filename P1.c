@@ -5,6 +5,10 @@
 
 int main(int argc, char *argv[]) {
   pid_t pid;
+  int N = atoi(argv[1]);
+    int a1 = atoi(argv[2]);
+    int a2 = atoi(argv[3]);
+    int a3 = atoi(argv[4]);
   
   pid = fork();
 
@@ -12,13 +16,13 @@ int main(int argc, char *argv[]) {
     printf("Error al crear el segundo proceso\n");
   }
   else if (pid == 0){
-   //execlp("p2", argv[1], argv[4], NULL);
-  printf("Webos\n");
+    for(int i = a3; i < N; i++) {
+      printf("%.0f\n", pow(2, i));
+    }
+  printf("P2 termina\n");
+  return -2;
   }
   else {
-    int N = atoi(argv[1]);
-    int a1 = atoi(argv[2]);
-    int a2 = atoi(argv[3]);
     printf("%d\n", a1);
     printf("%d\n", a2);
     for(int i = 0; i < N - 2; i ++){
@@ -27,6 +31,7 @@ int main(int argc, char *argv[]) {
       printf("%d\n", a2);
       a1 = j;
     }
+  printf("P1 terminado\n");
   return -1;
   }
 }
