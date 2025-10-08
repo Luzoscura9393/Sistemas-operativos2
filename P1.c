@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <math.h>
 
 int main(int argc, char *argv[]) {
   pid_t pid;
@@ -10,14 +12,21 @@ int main(int argc, char *argv[]) {
     printf("Error al crear el segundo proceso\n");
   }
   else if (pid == 0){
-   //xeclp("p2", argv1, argv[4], NULL);
+   //execlp("p2", argv[1], argv[4], NULL);
   printf("Webos\n");
   }
   else {
-    while(1){
-      printf("Padre\n");
-      sleep(1);
+    int N = atoi(argv[1]);
+    int a1 = atoi(argv[2]);
+    int a2 = atoi(argv[3]);
+    printf("%d\n", a1);
+    printf("%d\n", a2);
+    for(int i = 0; i < N - 2; i ++){
+      int j = a2;
+      a2 = a1 + a2;
+      printf("%d\n", a2);
+      a1 = j;
     }
-  return 0;
+  return -1;
   }
 }
