@@ -6,9 +6,9 @@
 int main(int argc, char *argv[]) {
   pid_t pid;
   int N = atoi(argv[1]);
-    int a1 = atoi(argv[2]);
-    int a2 = atoi(argv[3]);
-    int a3 = atoi(argv[4]);
+  int a1 = atoi(argv[2]);
+  int a2 = atoi(argv[3]);
+  int a3 = atoi(argv[4]);
   
   pid = fork();
 
