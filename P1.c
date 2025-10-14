@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     printf("Error al crear el segundo proceso\n");
   }
   else if (pid == 0){
-    for(int i = a3; i < N; i++) {
+    for(int i = a3; i < N + a3; i++) {
       printf("%.0f\n", pow(2, i));
     }
   printf("P2 termina\n");
