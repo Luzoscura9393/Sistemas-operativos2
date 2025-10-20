@@ -81,14 +81,15 @@ int main(int argc, char *argv[]) {
   }
   else if (valor > 0) {
     printf("P4 no esta en ejecucion\n");
-    sem_close(semaforo);
+    sem_destroy(semaforo);
+    sem_init(semaforo, 0666, 0);
     sem_close(semaforo4);
-    
     return 1;
   } else if (valor4 > 0) {
     printf("P3 no esta en ejecucion\n");
     sem_close(semaforo);
-    sem_close(semaforo4);
+    sem_destroy(semaforo4);
+    sem_init(semaforo4, 0666, 0);
     return 1;
   }  else {
     printf("P3 y P4 no se estan ejecutando\n");
