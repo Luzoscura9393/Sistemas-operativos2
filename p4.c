@@ -24,12 +24,16 @@ int main(void) {
 
   sem_t *dato2 = sem_open("/dato2", O_CREAT | O_RDWR, 0666, 0);
   sem_t *dato3 = sem_open("/dato3", 0666, 0);
-  printf("Esperando por P1\n");
-  sem_wait(dato2);
   const char maximo[] = "/tmp/miFifo";
   int fd = open(maximo, O_RDONLY);
   int N;
   read(fd, &N, sizeof(int));
+  close(fd);
+  printf("Esperando por P2\n");
+  sem_wait(dato2);
+  
+  
+  
   sem_post(dato3);
 
   int conexion = shmget(12345, sizeof(int), IPC_CREAT | 0666);
