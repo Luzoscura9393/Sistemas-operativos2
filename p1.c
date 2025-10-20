@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <semaphore.h>
+#include <sys/shm.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/ipc.h>
 
 int main(int argc, char *argv[]) {
   sem_t *semaforo = sem_open("/semaforo", O_CREAT | O_RDWR, 0666, 0);
