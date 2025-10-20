@@ -41,12 +41,14 @@ int main(int argc, char *argv[]) {
     sem_t *dato1 = sem_open("/dato1", 0666, 0);
     sem_t *dato3 = sem_open("/dato3", O_CREAT | O_RDWR, 0666, 0);
     const char maximo[] = "/tmp/miFifo";
-    unlink(maximo);
+    //unlink(maximo);
     mkfifo(maximo, 0666);
     int fd = open(maximo, O_WRONLY);
+    printf("HUEVOS\n");
     write(fd, &N, sizeof(int));
     close(fd);
     sem_post(dato1);
+    
     sem_wait(dato3);
 
     pid = fork();
