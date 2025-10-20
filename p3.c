@@ -25,6 +25,7 @@ int main(void) {
   
   sem_t *dato1 = sem_open("/dato1", O_CREAT | O_RDWR, 0666, 0);
   sem_t *dato2 = sem_open("/dato2", 0666, 0);
+  printf("Esperando por P1\n");
   sem_wait(dato1);
   const char maximo[] = "/tmp/miFifo";
   int fd = open(maximo, O_RDONLY);
@@ -35,7 +36,6 @@ int main(void) {
 
   int conexion = shmget(12345, sizeof(int), IPC_CREAT | 0666);
   int *buffer = (int *)shmat(conexion, NULL, 0);
-  printf("Esperando por P1\n");
   
   for(int i = 0; i < N; i++) {
     sem_wait(esperando1);
