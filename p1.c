@@ -67,10 +67,21 @@ int main(int argc, char *argv[]) {
       sem_t *esperando1 = sem_open("/esperando1", 0666, -1);
       sem_t *esperando4 = sem_open("/esperando4", O_CREAT | O_RDWR, 0666, 0);
 
+      const char *nombre_memoria = "/mem_compartida";
+      int fd = shm_open(nombre_memoria, O_RDWR, 0666);
+      if (fd == -1) {
+        perror("Error abriendo memoria compartida");
+        return 1;
+      }
 
-      int conexion = shmget(12345, sizeof(int), IPC_CREAT | 0666);
-      int *buffer = (int *)shmat(conexion, NULL, 0);
+      int *buffer = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+      if (buffer == MAP_FAILED) {
+        perror("Error en mmap");
+        close(fd);
+        return 1;
+      }
       *buffer = a1;
+
       sem_post(esperando1);
       sem_wait(esperando4);
       
