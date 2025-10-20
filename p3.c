@@ -25,12 +25,15 @@ int main(void) {
   
   sem_t *dato1 = sem_open("/dato1", O_CREAT | O_RDWR, 0666, 0);
   sem_t *dato2 = sem_open("/dato2", 0666, 0);
-  printf("Esperando por P1\n");
-  sem_wait(dato1);
   const char maximo[] = "/tmp/miFifo";
   int fd = open(maximo, O_RDONLY);
   int N;
   read(fd, &N, sizeof(int));
+  close(fd);
+  
+  printf("Esperando por P1\n");
+  sem_wait(dato1);
+  
   sem_post(dato2);
 
 
