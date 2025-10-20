@@ -3,10 +3,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <semaphore.h>
-#include <sys/shm.h>
 #include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/ipc.h>
+#include <sys/stat.h>   
+#include <sys/mman.h>
 
 int main(int argc, char *argv[]) {
   if (argc != 5) {
@@ -28,7 +27,7 @@ int main(int argc, char *argv[]) {
     sem_close(semaforo);
     sem_close(semaforo4);
     return 1;
-  } 
+  }
 
   if (valor > 0 && valor4 > 0) {
     
