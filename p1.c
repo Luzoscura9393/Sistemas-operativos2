@@ -9,17 +9,21 @@
 #include <sys/ipc.h>
 
 int main(int argc, char *argv[]) {
+  if (argc != 5) {
+    printf("Uso: p1 N a1 a2 a3\n");
+    return 3;
+  }else{
   sem_t *semaforo = sem_open("/semaforo", O_CREAT | O_RDWR, 0666, 0);
   sem_t *semaforo4 = sem_open("/semaforo4", O_CREAT | O_RDWR, 0666, 0);
 
-  if (semaforo == SEM_FAILED | semaforo4 == SEM_FAILED) {
+  if (semaforo == SEM_FAILED || semaforo4 == SEM_FAILED) {
     perror("sem_open fallo\n");
     return 1;
   }
 
   int valor;
   int valor4;
-  if (sem_getvalue(semaforo, &valor) == -1 | sem_getvalue(semaforo4, &valor4) == -1) {
+  if (sem_getvalue(semaforo, &valor) == -1 || sem_getvalue(semaforo4, &valor4) == -1) {
     perror("getvalue error en P3 y P4\n");
     sem_close(semaforo);
     sem_close(semaforo4);
@@ -83,6 +87,7 @@ int main(int argc, char *argv[]) {
     printf("P4 no esta en ejecucion\n");
     sem_destroy(semaforo);
     sem_init(semaforo, 0666, 0);
+    sem_close(semaforo);
     sem_close(semaforo4);
     return 1;
   } else if (valor4 > 0) {
@@ -90,11 +95,13 @@ int main(int argc, char *argv[]) {
     sem_close(semaforo);
     sem_destroy(semaforo4);
     sem_init(semaforo4, 0666, 0);
+    sem_close(semaforo4);
     return 1;
   }  else {
     printf("P3 y P4 no se estan ejecutando\n");
     sem_close(semaforo);
     sem_close(semaforo4);
     return 1;
+  }
   }
 }
