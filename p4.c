@@ -5,8 +5,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <errno.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
+#include <sys/mman.h>
 
 int main(void) {
   const char nombre[] = "/semaforo4";
@@ -36,17 +35,26 @@ int main(void) {
   
   sem_post(dato3);
 
-  int conexion = shmget(12345, sizeof(int), IPC_CREAT | 0666);
-  int *buffer = (int *)shmat(conexion, NULL, 0);
+  const char *nombre_memoria = "/mem_compartida";
+  int ft = shm_open(nombre_memoria, O_RDWR, 0666);
+  if (ft == -1) {
+    perror("Error abriendo memoria compartida");
+    return 1;
+  }
 
+
+  int *buffer = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (buffer == MAP_FAILED) {
+    perror("Error en mmap");
+    close(ft);
+    return 1;
+  }
 
   for(int i = 0; i < N; i++) {
     sem_wait(esperando2);
     printf("%d\n", *buffer);
     sem_post(esperando1);
   }
-
-
 
   sem_wait(semaforo);
   sem_close(semaforo);
