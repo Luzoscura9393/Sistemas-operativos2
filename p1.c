@@ -121,7 +121,6 @@ int main(int argc, char *argv[]) {
         sem_post(esperando1);
         sem_wait(esperando4);
       }
-    sem_post(esperando1);
     printf("P1 terminado\n");
     //wait(NULL);
     return -1;
