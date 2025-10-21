@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>   
 #include <sys/mman.h>
+#include <sys/wait.h>
 
 int main(int argc, char *argv[]) {
   if (argc != 5) {
@@ -72,13 +73,13 @@ int main(int argc, char *argv[]) {
         close(ft);
         return 1;
       }
-      sem_wait(esperando3);
 
       for(int i = a3; i < N + a3; i++) {
+         sem_wait(esperando3);
          *buffer = pow(2, i);
          printf("2: %d\n", *buffer);
          sem_post(esperando2);
-         sem_wait(esperando3);
+
       }
       printf("P2 terminado\n");
       return -2;
@@ -120,7 +121,9 @@ int main(int argc, char *argv[]) {
         sem_post(esperando1);
         sem_wait(esperando4);
       }
+    sem_post(esperando1);
     printf("P1 terminado\n");
+    //wait(NULL);
     return -1;
     }
   }
