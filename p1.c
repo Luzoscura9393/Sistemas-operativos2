@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
     //unlink(maximo);
     mkfifo(maximo, 0666);
     int fd = open(maximo, O_WRONLY);
-    printf("HUEVOS\n");
+
     write(fd, &N, sizeof(int));
     close(fd);
     sem_post(dato1);
@@ -56,40 +56,69 @@ int main(int argc, char *argv[]) {
       printf("Error al crear el segundo proceso\n");
     }
     else if (pid == 0){
-      for(int i = a3; i < N + a3; i++) {
-        printf("%.0f\n", pow(2, i));
+      sem_t *esperando2 = sem_open("/esperando2", 0666, 0);
+      sem_t *esperando3 = sem_open("/esperando3", O_CREAT | O_RDWR, 0666, 0);
+
+      const char *nombre_memoria = "/mem_compartida";
+      int ft = shm_open(nombre_memoria, O_RDWR, 0666);
+      if (ft == -1) {
+        perror("Error abriendo memoria compartida");
+        return 1;
       }
-    printf("P2 termina\n");
-    return -2;
+
+      int *buffer = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, ft, 0);
+      if (buffer == MAP_FAILED) {
+        perror("Error en mmap");
+        close(ft);
+        return 1;
+      }
+      sem_wait(esperando3);
+
+      for(int i = a3; i < N + a3; i++) {
+         *buffer = pow(2, i);
+         printf("2: %d\n", *buffer);
+         sem_post(esperando2);
+         sem_wait(esperando3);
+      }
+      printf("P2 terminado\n");
+      return -2;
     }
     else {
       sem_t *esperando1 = sem_open("/esperando1", 0666, -1);
       sem_t *esperando4 = sem_open("/esperando4", O_CREAT | O_RDWR, 0666, 0);
 
       const char *nombre_memoria = "/mem_compartida";
-      int fd = shm_open(nombre_memoria, O_RDWR, 0666);
-      if (fd == -1) {
+      int ft = shm_open(nombre_memoria, O_RDWR, 0666);
+      if (ft == -1) {
         perror("Error abriendo memoria compartida");
         return 1;
       }
 
-      int *buffer = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+      int *buffer = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, ft, 0);
       if (buffer == MAP_FAILED) {
         perror("Error en mmap");
-        close(fd);
+        close(ft);
         return 1;
       }
       *buffer = a1;
+      printf("1: %d\n", *buffer);
 
       sem_post(esperando1);
       sem_wait(esperando4);
       
-      printf("%d\n", a2);
+      *buffer = a2;
+      printf("1: %d\n", *buffer);
+      sem_post(esperando1);
+      sem_wait(esperando4);
+
       for(int i = 0; i < N - 2; i ++){
         int j = a2;
         a2 = a1 + a2;
-        printf("%d\n", a2);
+        *buffer = a2;
+        printf("1: %d\n", *buffer);
         a1 = j;
+        sem_post(esperando1);
+        sem_wait(esperando4);
       }
     printf("P1 terminado\n");
     return -1;
