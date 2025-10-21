@@ -25,12 +25,12 @@ int main(void) {
   sem_t *dato1 = sem_open("/dato1", O_CREAT | O_RDWR, 0666, 0);
   sem_t *dato2 = sem_open("/dato2", 0666, 0);
   const char maximo[] = "/tmp/miFifo";
+  printf("Esperando por P1\n");
   int fd = open(maximo, O_RDONLY);
   int N;
   read(fd, &N, sizeof(int));
   close(fd);
   
-  printf("Esperando por P1\n");
   sem_wait(dato1);
   
   sem_post(dato2);
@@ -47,22 +47,15 @@ int main(void) {
   close(ft);
   return 1;
   }
-  int *buffer = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if(buffer == MAP_FAILED){
-  perror("ERROR EN EL MMAP");
-  close(ft);
-  return 1;
-  }
-
-
-
   
+  int *buffer = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, ft, 0);
   for(int i = 0; i < N; i++) {
     sem_wait(esperando1);
     printf("%d\n", *buffer);
     sem_post(esperando3);
   }
 
+  printf("P3 termina\n");
   sem_wait(semaforo);
   sem_close(semaforo);
   return 0;
