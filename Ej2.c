@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
+#include <sys/time.h>
 
 #define PAGE_SIZE 4096
 #define PAGE_COUNT (1ULL << 20)
@@ -28,98 +29,125 @@ int decimal(const char* bin){
   }
   return num;
 }
-int hit(int *TLB, int direccion) {
+int hit(void *TLB, int direccion) {
   for (int i = 0; i < 270; i+=54) {
-    if (*(TLB + i) == direccion){
-      return i + 1;
+    if (*(int*)((char*)TLB + i) == direccion){
+      return (i/54) + 1;
     }
   }
   return 0;
 }
-void mover(int lista[], int n) {
-  int posicion = -1;
-  for (int i = 0; i < 5; i++){
-    if (lista[i] == n){
-      posicion = i;
+void re_hit(void *TLB, void *aux1, int n){
+  int indice = 270;
+  memcpy(aux1, (char*)TLB + n * 54, 54);
+  for (int i = 0; i < 270; i += 54){
+    if (*(int*)((char*)TLB + i) == 0) {
+      indice = i;
       break;
     }
   }
-  int temp = lista[posicion];
-  for (int i = posicion; i < 4; i++) {
-    lista[i] = lista[i + 1];
+  for (int i = n * 54; i < indice; i += 54) {
+    if (i == indice - 54) {
+      memcpy((char*)TLB + i, aux1, 54);
+    } else {
+      memcpy((char*)TLB + i, (char*)TLB + i + 54, 54);
+    }
   }
-  lista[4] = temp;
+}
+int re_miss(void *TLB, void *aux1) {
+  int indice = -1;
+
+  for (int i = 0; i < 270; i+=54){
+    if (*(int*)((char*)TLB + i) == 0) {
+      indice = i;
+      break;
+    }
+  }
+  if (indice >= 0) {
+    memcpy((char*)TLB + indice, aux1, 54);
+    return 0;
+  } else {
+    for (int i = 0; i < 216; i+=54){
+      memcpy((char*)TLB + i, (char*)TLB + i + 54, 54);
+    }
+    memcpy((char*)TLB + 216, aux1, 54);
+    return 1;
+  }
 }
 int main(int argc, char *argv[]) {
   int salir = 1;
-  void *TLB = malloc(300); 
-  int orden[5] = {0, 1, 2, 3, 4};
+  void *TLB = malloc(300);
+  memset(TLB, 0, 300);
+  void *aux1 = malloc(54);
+  memset(aux1, 0, 54);
   while(salir){
-    int indice = -1;
     char input[100];
+    int reemplazo = 0;
+
     printf("Ingrese direccion virtual: ");
+
     if (fgets(input, sizeof input, stdin) != NULL){
       input[strcspn(input, "\n")] = '\0';
       if (entero(input)) {
-        printf("TLB desde 0x0%x hasta 0x0%x\n", TLB, TLB + 300);
-        //printf("%x\n",TLB);
-        //printf("%x\n", TLB + 300);
-        
+        struct timeval inicio, fin;
+        gettimeofday(&inicio, NULL);
+        printf("TLB desde %p hasta %p\n", TLB, (char*)TLB + 300);
+
         int bits = sizeof(int) * 5;
         char bin[bits + 1];
+
         int numero = atoi(input);
         int pagina = numero / 4096;
         int desp = numero % 4096;
+
         char pagbin[bits + 1];
         char desbin[bits + 1];
+
         binario(pagina, pagbin, bits);
         binario(desp, desbin, bits);
+
         int esta_en = hit(TLB, numero);
+
         if (esta_en > 0) {
-          mover(orden, esta_en - 1);
+          re_hit(TLB, aux1, esta_en - 1);
+
           printf("TLB Hit\n");
+
         } else {
           printf("TLB Miss\n");
-          int lleno = 1;
-          for (int i = 0; i < 270; i+=54) {
-            if (*(int*)((char*)TLB + i) == 0) {
-              lleno = 0;
-	      memcpy(TLB + i, &numero, sizeof(int));
-	      memcpy(TLB + i + sizeof(int), &pagina, sizeof(int));
-	      memcpy(TLB + i + sizeof(int) * 2, &desp, sizeof(int));
-	      memcpy(TLB + i + sizeof(int) * 3, &pagbin, 21);
-	      memcpy(TLB + i + sizeof(int) * 3 + 21, &desbin, 21);
-              break;
-            }
-          }
-          if (lleno) {
-            indice = orden[0];
-            mover(orden, indice);
-            int irem = 54 * indice;
-            memcpy(TLB + irem, &numero, sizeof(int));
-	    memcpy(TLB + irem + sizeof(int), &pagina, sizeof(int));
-	    memcpy(TLB + irem + sizeof(int) * 2, &desp, sizeof(int));
-	    memcpy(TLB + irem + sizeof(int) * 3, &pagbin, 21);
-            memcpy(TLB + irem + sizeof(int) * 3 + 21, &desbin, 21);
-          }
+
+          memcpy((char*)aux1, &numero, sizeof(int));
+          memcpy((char*)aux1 + sizeof(int), &pagina, sizeof(int));
+          memcpy((char*)aux1 + sizeof(int) * 2, &desp, sizeof(int));
+          memcpy((char*)aux1 + sizeof(int) * 3, pagbin, 21);
+          memcpy((char*)aux1 + sizeof(int) * 3 + 21, desbin, 21);
+
+          reemplazo = re_miss(TLB, aux1);
         }
-        binario(numero, bin, bits);
+        gettimeofday(&fin, NULL);
+        double tiempo = (fin.tv_sec - inicio.tv_sec) + (fin.tv_usec - inicio.tv_usec) / 1e6;
         printf("Pagina: %d\n", pagina);
         printf("Desplazamiento: %d\n", desp);
         printf("Pagina en binario: %s\n", pagbin);
         printf("Desplazamiento en binario: %s\n", desbin);
         printf("Politica de reemplazo: ");
-        if (indice >= 0) printf("0x0%x\n", TLB + 54 * indice);
+
+        if (reemplazo) printf("%p\n", TLB);
         else printf("0x0\n");
+
+        printf("Tiempo: %.6f segundos\n", tiempo);
+
         printf("\n");
-        memset(bin, 0, sizeof(bin));
+
       }else {
         if (*input == 's') salir--;
         else (printf("Entrada invalidad\n"));
       }
     }
   }
+
   free(TLB);
+  free(aux1);
   printf("Good bye!\n");
   return 0;
 }
